@@ -1,16 +1,25 @@
 use std::error::Error;
-use std::io::{self, Read, Write};
+use std::io::{self, Read};
+use std::process::exit;
 
 use serde_json::Value as JsonValue;
 use toml::Value as TomlValue;
 
-fn main() -> Result<(), Box<dyn Error>> {
-    let text = read_stdin_to_string()?;
-    let toml = toml::from_str::<TomlValue>(&text)?;
-    let json = toml_to_json(toml);
-    let output = serde_json::to_string_pretty(&json)?;
-    io::stdout().write_all(output.as_bytes())?;
-    Ok(())
+fn main() {
+    match process() {
+        Ok(output) => println!("{}", output),
+        Err(e) => {
+            eprintln!("error: {}", e);
+            exit(1);
+        }
+    }
+}
+
+fn process() -> Result<String, Box<dyn Error>> {
+    let input = read_stdin_to_string()?;
+    let value = toml::from_str::<TomlValue>(&input)?;
+    let output = serde_json::to_string_pretty(&toml_to_json(value))?;
+    Ok(output)
 }
 
 fn read_stdin_to_string() -> Result<String, io::Error> {
